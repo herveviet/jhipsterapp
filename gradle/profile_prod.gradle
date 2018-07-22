@@ -27,10 +27,6 @@ task webpack(type: YarnTask, dependsOn: 'yarn_install') {
     args = ["run", "webpack:prod"]
 }
 
-war {
-    webAppDirName = 'build/www/'
-}
-
 processResources {
     filesMatching('**/application.yml') {
         filter {

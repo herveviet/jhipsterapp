@@ -33,7 +33,6 @@ assert System.properties['java.specification.version'] == '1.8'
 
 apply plugin: 'maven'
 apply plugin: 'org.springframework.boot'
-apply plugin: 'war'
 apply plugin: 'propdeps'
 apply plugin: 'com.moowork.node'
 apply plugin: 'io.spring.dependency-management'
@@ -46,48 +45,10 @@ dependencyManagement {
   }
 }
 
-defaultTasks 'bootRun'
-
 group = 'com.mycompany.myapp'
 version = '0.0.1-SNAPSHOT'
 
 description = ''
-
-bootWar {
-   mainClassName = 'com.mycompany.myapp.SampleappApp'
-}
-
-war {
-
-}
-
-springBoot {
-    mainClassName = 'com.mycompany.myapp.SampleappApp'
-    buildInfo()
-}
-
-if (OperatingSystem.current().isWindows()) {
-    // https://stackoverflow.com/questions/40037487/the-filename-or-extension-is-too-long-error-using-gradle
-    task classpathJar(type: Jar) {
-        dependsOn configurations.runtime
-        appendix = 'classpath'
-
-        doFirst {
-            manifest {
-                attributes 'Class-Path': configurations.runtime.files.collect {
-                    it.toURI().toURL().toString().replaceFirst(/file:\/+/, '/').replaceAll(' ', '%20')
-                }.join(' ')
-            }
-        }
-    }
-
-    bootRun {
-        dependsOn classpathJar
-        doFirst {
-            classpath = files("$buildDir/classes/java/main", "$buildDir/resources/main", classpathJar.archivePath)
-        }
-    }
-}
 
 test {
     exclude '**/CucumberTest*'
@@ -120,8 +81,6 @@ task cucumberTestReport(type: TestReport) {
     reportOn cucumberTest
 }
 
-apply from: 'gradle/docker.gradle'
-apply from: 'gradle/sonar.gradle'
 apply from: 'gradle/liquibase.gradle'
 //jhipster-needle-gradle-apply-from - JHipster will add additional gradle scripts to be applied here
 
@@ -129,19 +88,6 @@ if (project.hasProperty('prod')) {
     apply from: 'gradle/profile_prod.gradle'
 } else {
     apply from: 'gradle/profile_dev.gradle'
-}
-
-if (project.hasProperty('graphite')) {
-    apply from: 'gradle/graphite.gradle'
-}
-
-if (project.hasProperty('prometheus')) {
-    apply from: 'gradle/prometheus.gradle'
-}
-
-configurations {
-    providedRuntime
-    compile.exclude module: "spring-boot-starter-tomcat"
 }
 
 repositories {
@@ -185,9 +131,7 @@ dependencies {
     compile "org.springframework.boot:spring-boot-starter-aop"
     compile "org.springframework.boot:spring-boot-starter-data-jpa"
     compile "org.springframework.boot:spring-boot-starter-security"
-    compile ("org.springframework.boot:spring-boot-starter-web") {
-        exclude module: 'spring-boot-starter-tomcat'
-    }
+    compile "org.springframework.boot:spring-boot-starter-web"
     compile "org.springframework.boot:spring-boot-starter-undertow"
     compile "org.springframework.boot:spring-boot-starter-websocket"
     compile "org.springframework.boot:spring-boot-starter-thymeleaf"
@@ -223,27 +167,3 @@ dependencies {
     testCompile "org.hamcrest:hamcrest-library"
     //jhipster-needle-gradle-dependency - JHipster will add additional dependencies here
 }
-
-task cleanResources(type: Delete) {
-    delete 'build/resources'
-}
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.6'
-}
-
-task stage(dependsOn: 'bootWar') {
-}
-
-if (project.hasProperty('nodeInstall')) {
-    node {
-        version = "${node_version}"
-        npmVersion = "${npm_version}"
-        yarnVersion = "${yarn_version}"
-        download = true
-    }
-}
-
-compileJava.dependsOn processResources
-processResources.dependsOn cleanResources,bootBuildInfo
-bootBuildInfo.mustRunAfter cleanResources

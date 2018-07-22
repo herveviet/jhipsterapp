@@ -21,10 +21,6 @@ task webpackBuildDev(type: YarnTask) {
     args = ["run", "webpack:build"]
 }
 
-war {
-    webAppDirName = 'src/main/webapp/'
-}
-
 processResources {
     filesMatching('**/application.yml') {
         filter {
